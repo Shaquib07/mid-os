@@ -1,0 +1,2181 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MidOS, give your agent a wallet on Casper</title>
+  <meta name="description"
+    content="MidOS is an MCP wallet that lets AI agents autonomously pay for x402-gated APIs on Casper — real on-chain settlement, self-custody, no API keys." />
+  <link rel="icon" type="image/svg+xml" href="midos-mark.svg" />
+  <!-- After deploying, set absolute canonical/og:url/og:image URLs to your domain for best link previews. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="MidOS — give your agent a wallet on Casper" />
+  <meta property="og:description"
+    content="An MCP wallet that lets AI agents autonomously pay for x402-gated APIs on Casper — real on-chain settlement, self-custody, no API keys." />
+  <meta property="og:image" content="og.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="MidOS — give your agent a wallet on Casper" />
+  <meta name="twitter:description"
+    content="AI agents that pay for x402-gated APIs on Casper. Real on-chain settlement, self-custody, no API keys." />
+  <meta name="twitter:image" content="og.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0C0B09;
+      --ink-2: #15130F;
+      --ink-3: #1D1A15;
+      --bone: #ECE6D8;
+      --bone-2: #E2DAC8;
+      --dim: #8C8576;
+      --dim-2: #5A5346;
+      --red: #E5332A;
+      --red-deep: #B81F18;
+      --green: #6FB286;
+      --r: 3px;
+      --maxw: 1180px;
+      --gut: 30px;
+      --display: 'Fraunces', Georgia, serif;
+      --sans: 'Hanken Grotesk', -apple-system, sans-serif;
+      --mono: 'JetBrains Mono', ui-monospace, monospace;
+      /* per-section theming (default: dark) */
+      --fg: var(--bone);
+      --muted: var(--dim);
+      --bg: var(--ink);
+      --panel: var(--ink-2);
+      --hair: rgba(236, 230, 216, .14);
+      --hair-2: rgba(236, 230, 216, .07);
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html {
+      scroll-behavior: smooth
+    }
+
+    body {
+      margin: 0;
+      background: var(--ink);
+      color: var(--bone);
+      font-family: var(--sans);
+      font-size: 17px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* fine grain */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: .04;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none
+    }
+
+    ::selection {
+      background: var(--red);
+      color: #fff
+    }
+
+    ::-webkit-scrollbar {
+      width: 11px;
+      height: 11px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--ink)
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #2c2820;
+      border: 3px solid var(--ink)
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--red)
+    }
+
+    .wrap {
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 0 var(--gut)
+    }
+
+    .mono {
+      font-family: var(--mono)
+    }
+
+    /* ── section theming ── */
+    .sect {
+      position: relative;
+      padding: 96px 0;
+      background: var(--bg);
+      color: var(--fg);
+      border-top: 1px solid var(--hair)
+    }
+
+    .sect.light {
+      --fg: #0C0B09;
+      --muted: #5A5346;
+      --bg: var(--bone);
+      --panel: #F3EEE2;
+      --hair: rgba(12, 11, 9, .15);
+      --hair-2: rgba(12, 11, 9, .08)
+    }
+
+    .sect.tight {
+      padding: 60px 0
+    }
+
+    /* ── shared bits ── */
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--muted)
+    }
+
+    .kicker b {
+      color: var(--red);
+      font-weight: 700
+    }
+
+    .sq {
+      width: 8px;
+      height: 8px;
+      background: var(--red);
+      display: inline-block;
+      flex-shrink: 0
+    }
+
+    .shead {
+      display: flex;
+      align-items: baseline;
+      gap: 18px;
+      margin-bottom: 30px
+    }
+
+    .shead .ix {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--red)
+    }
+
+    h2 {
+      font-family: var(--display);
+      font-weight: 500;
+      font-size: clamp(34px, 5vw, 60px);
+      line-height: 1;
+      letter-spacing: -.03em;
+      margin: 0 0 20px
+    }
+
+    h2 em {
+      font-style: normal;
+      color: var(--red)
+    }
+
+    .sec-lede {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 56ch;
+      margin: 0 0 52px;
+      line-height: 1.55
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 15px 24px;
+      font-family: var(--mono);
+      font-weight: 600;
+      font-size: 13.5px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      border-radius: var(--r);
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: transform .16s, background .2s, color .2s, border-color .2s
+    }
+
+    .btn svg {
+      width: 15px;
+      height: 15px
+    }
+
+    .btn-primary {
+      background: var(--red);
+      color: #fff
+    }
+
+    .btn-primary:hover {
+      background: var(--red-deep);
+      transform: translateY(-2px)
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--fg);
+      border-color: var(--hair)
+    }
+
+    .btn-ghost:hover {
+      border-color: currentColor;
+      transform: translateY(-2px)
+    }
+
+    /* ── nav ── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      transition: background .35s, border-color .35s;
+      background: transparent;
+      border-bottom: 1px solid transparent
+    }
+
+    nav.scrolled {
+      background: rgba(12, 11, 9, .86);
+      backdrop-filter: blur(12px) saturate(1.2);
+      border-bottom-color: var(--hair)
+    }
+
+    .nav-in {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 66px
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: baseline;
+      font-family: var(--display);
+      font-weight: 600;
+      font-size: 23px;
+      letter-spacing: -.02em;
+      color: var(--bone)
+    }
+
+    .brand .os {
+      color: var(--red)
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 30px
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 26px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      font-weight: 500;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      color: var(--dim);
+      opacity: 0;
+      transform: translateY(-6px);
+      pointer-events: none;
+      transition: opacity .35s, transform .35s
+    }
+
+    nav.scrolled .nav-links {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto
+    }
+
+    .nav-links a {
+      position: relative;
+      padding: 3px 0;
+      transition: color .2s
+    }
+
+    .nav-links a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -2px;
+      width: 100%;
+      height: 1.5px;
+      background: var(--red);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .26s cubic-bezier(.2, .7, .2, 1)
+    }
+
+    .nav-links a:hover {
+      color: var(--bone)
+    }
+
+    .nav-links a:hover::after {
+      transform: scaleX(1)
+    }
+
+    @media(max-width:780px) {
+      .nav-links {
+        display: none
+      }
+    }
+
+    .ghbtn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border: 1px solid var(--hair);
+      border-radius: 999px;
+      color: var(--bone);
+      font-family: var(--mono);
+      font-weight: 600;
+      font-size: 12.5px;
+      letter-spacing: .03em;
+      transition: .22s
+    }
+
+    .ghbtn:hover {
+      background: var(--bone);
+      color: var(--ink);
+      border-color: var(--bone)
+    }
+
+    .ghbtn svg {
+      width: 15px;
+      height: 15px
+    }
+
+    /* ── marquee ── */
+    .marquee {
+      position: relative;
+      z-index: 2;
+      overflow: hidden;
+      border-top: 1px solid var(--hair);
+      border-bottom: 1px solid var(--hair);
+      background: var(--ink);
+      white-space: nowrap;
+      padding: 11px 0
+    }
+
+    .marquee-track {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      animation: scroll 34s linear infinite;
+      will-change: transform
+    }
+
+    .marquee:hover .marquee-track {
+      animation-play-state: paused
+    }
+
+    .marquee span {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--dim);
+      padding: 0 26px
+    }
+
+    .marquee span b {
+      color: var(--bone);
+      font-weight: 700
+    }
+
+    .marquee i {
+      width: 6px;
+      height: 6px;
+      background: var(--red);
+      transform: rotate(45deg);
+      display: inline-block;
+      flex-shrink: 0
+    }
+
+    @keyframes scroll {
+      to {
+        transform: translateX(-50%)
+      }
+    }
+
+    /* ── hero ── */
+    header {
+      position: relative;
+      overflow: hidden;
+      background: var(--ink);
+      padding-top: 66px
+    }
+
+    /* ruled vertical pinstripe texture (pattern, not a color gradient) */
+    header::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .5;
+      background-image:
+        repeating-linear-gradient(90deg, var(--hair-2) 0 1px, transparent 1px 140px);
+    }
+
+    .hero {
+      position: relative;
+      z-index: 1;
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 78px var(--gut) 64px;
+      display: grid;
+      grid-template-columns: 1.18fr .82fr;
+      gap: 56px;
+      align-items: center
+    }
+
+    @media(max-width:940px) {
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        align-items: start;
+        padding-top: 60px
+      }
+    }
+
+    .hero-kick {
+      margin-bottom: 26px
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-weight: 500;
+      font-size: clamp(60px, 11vw, 150px);
+      line-height: .86;
+      letter-spacing: -.045em;
+      margin: 0 0 30px;
+      color: var(--bone)
+    }
+
+    h1 .it {
+      font-style: normal;
+      color: var(--red);
+      font-weight: 500
+    }
+
+    .hero-lede {
+      font-size: 20px;
+      color: var(--dim);
+      max-width: 46ch;
+      margin: 0 0 38px;
+      line-height: 1.5
+    }
+
+    .hero-lede b {
+      color: var(--bone);
+      font-weight: 600
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center
+    }
+
+    /* hero transmission log */
+    .ledger {
+      border: 1px solid var(--hair);
+      border-left: 2px solid var(--red);
+      background: rgba(21, 19, 15, .6);
+      border-radius: var(--r);
+      width: 100%
+    }
+
+    .ledger-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--hair);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--dim)
+    }
+
+    .ledger-bar .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--bone)
+    }
+
+    .pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 0 rgba(111, 178, 134, .6);
+      animation: pulse 2s infinite
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(111, 178, 134, .55)
+      }
+
+      70% {
+        box-shadow: 0 0 0 7px rgba(111, 178, 134, 0)
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(111, 178, 134, 0)
+      }
+    }
+
+    .demo-ask {
+      padding: 15px 18px 14px;
+      border-bottom: 1px dashed var(--hair)
+    }
+
+    .demo-ask .who {
+      display: block;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 7px
+    }
+
+    .demo-ask .q {
+      font-family: var(--display);
+      font-size: 18px;
+      line-height: 1.35;
+      color: var(--bone)
+    }
+
+    .demo-steps {
+      list-style: none;
+      margin: 0;
+      padding: 18px 18px 4px
+    }
+
+    .demo-steps li {
+      position: relative;
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 13px;
+      padding-bottom: 17px
+    }
+
+    .demo-steps li::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 16px;
+      bottom: -1px;
+      width: 1px;
+      background: var(--hair)
+    }
+
+    .demo-steps li:last-child::before {
+      display: none
+    }
+
+    .ds-dot {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      border: 2px solid var(--dim);
+      background: var(--ink);
+      margin-top: 2px;
+      z-index: 1
+    }
+
+    .ds-dot.red {
+      border-color: var(--red)
+    }
+
+    .ds-dot.ok {
+      border-color: var(--green);
+      background: var(--green)
+    }
+
+    .ds-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 14.5px;
+      font-weight: 600;
+      line-height: 1.3;
+      color: var(--bone)
+    }
+
+    .ds-sub {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--dim);
+      margin-top: 4px
+    }
+
+    .ds-ans {
+      font-family: var(--display);
+      font-size: 18px;
+      line-height: 1.35;
+      color: var(--bone);
+      margin-top: 6px
+    }
+
+    .ds-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid var(--red);
+      color: var(--red)
+    }
+
+    .ds-tag.ok {
+      border-color: var(--green);
+      color: var(--green)
+    }
+
+    @keyframes blink {
+      50% {
+        opacity: 0
+      }
+    }
+
+    .ledger-foot {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-top: 1px solid var(--hair);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green)
+    }
+
+    /* hero baseline stats */
+    .hero-stats {
+      position: relative;
+      z-index: 1;
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 0 var(--gut);
+      border-top: 1px solid var(--hair)
+    }
+
+    .hero-stats ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr)
+    }
+
+    .hero-stats li {
+      padding: 22px 0 26px;
+      border-left: 1px solid var(--hair);
+      padding-left: 20px
+    }
+
+    .hero-stats li:first-child {
+      border-left: none;
+      padding-left: 0
+    }
+
+    .hero-stats .v {
+      font-family: var(--display);
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: -.01em;
+      color: var(--bone);
+      display: block;
+      margin-bottom: 4px
+    }
+
+    .hero-stats .v .red {
+      color: var(--red)
+    }
+
+    .hero-stats .l {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--dim)
+    }
+
+    @media(max-width:680px) {
+      .hero-stats ul {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .hero-stats li:nth-child(3) {
+        border-left: none;
+        padding-left: 0
+      }
+    }
+
+    /* ── problem statement ── */
+    .bigline {
+      font-family: var(--display);
+      font-weight: 500;
+      font-size: clamp(30px, 5.4vw, 64px);
+      line-height: 1.05;
+      letter-spacing: -.03em;
+      max-width: 17ch
+    }
+
+    .bigline .strike {
+      position: relative;
+      color: var(--dim);
+      white-space: nowrap
+    }
+
+    .bigline .strike::after {
+      content: "";
+      position: absolute;
+      left: -2px;
+      right: -2px;
+      top: 52%;
+      height: 4px;
+      background: var(--red)
+    }
+
+    .bigline em {
+      font-style: normal;
+      color: var(--red)
+    }
+
+    /* ── flow ledger (how) ── */
+    .flow-list {
+      border-top: 1px solid var(--hair)
+    }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: 78px 1fr 240px;
+      gap: 24px;
+      align-items: baseline;
+      padding: 26px 14px;
+      border-bottom: 1px solid var(--hair);
+      transition: background .25s, padding-left .25s
+    }
+
+    .flow-row:hover {
+      background: var(--panel);
+      padding-left: 24px
+    }
+
+    .flow-i {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--red)
+    }
+
+    .flow-main h4 {
+      margin: 0 0 6px;
+      font-size: 21px;
+      font-weight: 600;
+      letter-spacing: -.01em;
+      font-family: var(--display)
+    }
+
+    .flow-main p {
+      margin: 0;
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.55
+    }
+
+    .flow-sig {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--muted);
+      text-align: right;
+      letter-spacing: .01em
+    }
+
+    .flow-sig .red {
+      color: var(--red);
+      font-weight: 600
+    }
+
+    .flow-sig .ok {
+      color: var(--green);
+      font-weight: 600
+    }
+
+    @media(max-width:820px) {
+      .flow-row {
+        grid-template-columns: 54px 1fr;
+        gap: 18px
+      }
+
+      .flow-sig {
+        display: none
+      }
+    }
+
+    /* ── examples / terminal ── */
+    .ex-tabs {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+      margin-bottom: 26px;
+      border-bottom: 1px solid var(--hair)
+    }
+
+    .ex-tab {
+      position: relative;
+      padding: 0 0 14px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color .2s
+    }
+
+    .ex-tab .n {
+      color: var(--red);
+      margin-right: 7px;
+      opacity: .6
+    }
+
+    .ex-tab::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      width: 100%;
+      height: 2px;
+      background: var(--red);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform .26s cubic-bezier(.2, .7, .2, 1)
+    }
+
+    .ex-tab:hover {
+      color: var(--fg)
+    }
+
+    .ex-tab.active {
+      color: var(--fg)
+    }
+
+    .ex-tab.active::after {
+      transform: scaleX(1)
+    }
+
+    .ex-tab.active .n {
+      opacity: 1
+    }
+
+    .ex-panel {
+      display: none
+    }
+
+    .ex-panel.active {
+      display: block;
+      animation: fade .42s ease both
+    }
+
+    @keyframes fade {
+      from {
+        opacity: 0;
+        transform: translateY(10px)
+      }
+    }
+
+    .term {
+      background: var(--ink);
+      border: 1px solid var(--hair);
+      border-radius: var(--r);
+      overflow: hidden
+    }
+
+    .sect.light .term {
+      border-color: rgba(12, 11, 9, .22)
+    }
+
+    .term-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(236, 230, 216, .12);
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--dim);
+      letter-spacing: .04em
+    }
+
+    .term-bar .dots {
+      display: flex;
+      gap: 6px
+    }
+
+    .term-bar .dots i {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: block;
+      background: #2f2b22
+    }
+
+    .term-bar .dots i.r {
+      background: var(--red)
+    }
+
+    .term-ask {
+      padding: 18px 18px 14px;
+      font-family: var(--mono);
+      font-size: 14.5px;
+      color: var(--bone);
+      display: flex;
+      gap: 12px
+    }
+
+    .term-ask .pr {
+      color: var(--red);
+      font-weight: 700
+    }
+
+    .term-ask .caret {
+      display: inline-block;
+      width: 8px;
+      height: 1.05em;
+      background: var(--red);
+      vertical-align: -2px;
+      animation: blink 1.05s steps(1) infinite
+    }
+
+    .term-log {
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.95;
+      padding: 4px 18px 18px;
+      color: #cfc6b3;
+      border-top: 1px dashed rgba(236, 230, 216, .14);
+      margin-top: 4px;
+      padding-top: 16px;
+      overflow-x: auto
+    }
+
+    .term-log .k {
+      color: #E89A6B
+    }
+
+    .term-log .red {
+      color: var(--red);
+      font-weight: 600
+    }
+
+    .term-log .ok {
+      color: var(--green);
+      font-weight: 600
+    }
+
+    .term-log .w {
+      color: var(--bone)
+    }
+
+    .term-log .mut {
+      color: var(--dim)
+    }
+
+    .term-foot {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 18px 18px;
+      padding: 7px 13px;
+      border: 1px solid rgba(111, 178, 134, .4);
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--green)
+    }
+
+    /* ── tools registry ── */
+    .registry {
+      border-top: 1px solid var(--hair)
+    }
+
+    .reg-head,
+    .reg-row {
+      display: grid;
+      grid-template-columns: 60px 230px 1fr 90px;
+      gap: 20px;
+      align-items: center
+    }
+
+    .reg-head {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--hair);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted)
+    }
+
+    .reg-row {
+      padding: 20px 14px;
+      border-bottom: 1px solid var(--hair);
+      transition: background .22s, padding-left .22s
+    }
+
+    .reg-row:hover {
+      background: var(--panel);
+      padding-left: 24px
+    }
+
+    .reg-i {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted)
+    }
+
+    .reg-name {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--fg);
+      transition: color .2s
+    }
+
+    .reg-row:hover .reg-name {
+      color: var(--red)
+    }
+
+    .reg-name .d {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0
+    }
+
+    .reg-row.x402 .reg-name .d {
+      background: var(--red)
+    }
+
+    .reg-fn {
+      font-size: 14.5px;
+      color: var(--muted);
+      line-height: 1.5
+    }
+
+    .reg-tag {
+      justify-self: end;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--hair);
+      color: var(--muted)
+    }
+
+    .reg-row.x402 .reg-tag {
+      color: var(--red);
+      border-color: rgba(229, 51, 42, .4)
+    }
+
+    @media(max-width:860px) {
+
+      .reg-head {
+        display: none
+      }
+
+      .reg-row {
+        grid-template-columns: 34px 1fr;
+        gap: 6px 14px;
+        row-gap: 6px
+      }
+
+      .reg-i {
+        grid-row: span 2
+      }
+
+      .reg-tag {
+        display: none
+      }
+
+      .reg-fn {
+        grid-column: 2
+      }
+    }
+
+    /* ── why casper matrix ── */
+    .matrix {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid var(--hair);
+      border-left: 1px solid var(--hair)
+    }
+
+    @media(max-width:720px) {
+      .matrix {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .cell {
+      padding: 34px 32px;
+      border-right: 1px solid var(--hair);
+      border-bottom: 1px solid var(--hair);
+      transition: background .25s
+    }
+
+    .cell:hover {
+      background: var(--panel)
+    }
+
+    .cell .ci {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--red);
+      margin-bottom: 18px
+    }
+
+    .cell .ci svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: var(--red);
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round
+    }
+
+    .cell h4 {
+      margin: 0 0 9px;
+      font-family: var(--display);
+      font-size: 23px;
+      font-weight: 600;
+      letter-spacing: -.01em
+    }
+
+    .cell p {
+      margin: 0;
+      font-size: 15px;
+      color: var(--muted);
+      line-height: 1.55
+    }
+
+    .cell .mono {
+      color: var(--fg)
+    }
+
+    /* ── quickstart ── */
+    .qs {
+      border-top: 1px solid var(--hair)
+    }
+
+    .qstep {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 30px;
+      padding: 40px 0;
+      border-bottom: 1px solid var(--hair)
+    }
+
+    .qstep .qn {
+      font-family: var(--display);
+      font-size: 56px;
+      font-weight: 500;
+      line-height: 1;
+      color: var(--fg);
+      letter-spacing: -.03em
+    }
+
+    .qstep .qn::after {
+      content: "";
+      display: block;
+      width: 30px;
+      height: 3px;
+      background: var(--red);
+      margin-top: 14px
+    }
+
+    .qstep h4 {
+      margin: 0 0 10px;
+      font-family: var(--display);
+      font-size: 25px;
+      font-weight: 600;
+      letter-spacing: -.01em
+    }
+
+    .qstep p {
+      margin: 0;
+      font-size: 16px;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 62ch
+    }
+
+    .qstep code,
+    .qstep .mono {
+      font-family: var(--mono);
+      font-size: .88em;
+      color: var(--fg)
+    }
+
+    @media(max-width:600px) {
+      .qstep {
+        grid-template-columns: 60px 1fr;
+        gap: 18px
+      }
+
+      .qstep .qn {
+        font-size: 38px
+      }
+    }
+
+    /* code blocks */
+    .code {
+      margin-top: 18px;
+      background: var(--ink);
+      border: 1px solid rgba(236, 230, 216, .14);
+      border-radius: var(--r);
+      overflow: hidden
+    }
+
+    .sect.light .code {
+      border-color: rgba(12, 11, 9, .2)
+    }
+
+    .code-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 15px;
+      border-bottom: 1px solid rgba(236, 230, 216, .12)
+    }
+
+    .code-head .ttl {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--dim);
+      letter-spacing: .03em
+    }
+
+    .copy {
+      background: transparent;
+      border: 1px solid #3a3327;
+      color: #cdc1a8;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      padding: 5px 11px;
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: .18s
+    }
+
+    .copy:hover {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red)
+    }
+
+    pre {
+      margin: 0;
+      padding: 17px;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.8;
+      color: #E7DECB
+    }
+
+    pre .c {
+      color: #7c7261
+    }
+
+    pre .k {
+      color: #E89A6B
+    }
+
+    pre .s {
+      color: #9bb986
+    }
+
+    .os-paths {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px
+    }
+
+    .os-path {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 13px;
+      border: 1px solid var(--hair);
+      border-radius: var(--r);
+      font-family: var(--mono);
+      font-size: 12px
+    }
+
+    .os-path b {
+      color: var(--red);
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      font-size: 11px
+    }
+
+    .os-path code {
+      color: var(--muted);
+      word-break: break-all
+    }
+
+    .prompt-quote {
+      margin-top: 18px;
+      padding: 18px 22px;
+      border-left: 2px solid var(--red);
+      background: var(--panel);
+      border-radius: 0 var(--r) var(--r) 0;
+      font-family: var(--display);
+      font-style: italic;
+      font-size: 20px;
+      color: var(--fg)
+    }
+
+    /* ── final cta (full-bleed red) ── */
+    .final {
+      background: var(--red);
+      color: #fff;
+      border: none;
+      text-align: center;
+      padding: 110px 0
+    }
+
+    .final::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: .5;
+      background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, .07) 0 1px, transparent 1px 120px)
+    }
+
+    .final .kicker {
+      color: rgba(255, 255, 255, .8);
+      justify-content: center;
+      margin-bottom: 22px
+    }
+
+    .final .kicker .sq {
+      background: #fff
+    }
+
+    .final h2 {
+      color: #fff;
+      font-size: clamp(40px, 7vw, 84px);
+      margin-bottom: 22px;
+      position: relative
+    }
+
+    .final h2 em {
+      color: var(--ink);
+      font-style: normal
+    }
+
+    .final p {
+      position: relative;
+      color: rgba(255, 255, 255, .9);
+      max-width: 48ch;
+      margin: 0 auto 36px;
+      font-size: 19px
+    }
+
+    .final .btn-primary {
+      background: var(--ink);
+      color: #fff;
+      position: relative
+    }
+
+    .final .btn-primary:hover {
+      background: #000
+    }
+
+    /* ── footer ── */
+    footer {
+      background: var(--ink);
+      color: var(--dim);
+      padding: 56px 0 64px;
+      border-top: 1px solid var(--hair)
+    }
+
+    .foot-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-bottom: 48px
+    }
+
+    .foot-blurb {
+      max-width: 34ch;
+      font-size: 15px;
+      color: var(--dim);
+      margin-top: 14px;
+      line-height: 1.55
+    }
+
+    .foot-links {
+      display: flex;
+      gap: 60px;
+      flex-wrap: wrap
+    }
+
+    .foot-col h5 {
+      margin: 0 0 16px;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--red)
+    }
+
+    .foot-col a {
+      display: block;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--bone);
+      padding: 5px 0;
+      transition: color .2s
+    }
+
+    .foot-col a:hover {
+      color: var(--red)
+    }
+
+    .foot-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-top: 26px;
+      border-top: 1px solid var(--hair);
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: .04em;
+      color: var(--dim)
+    }
+
+    /* ── reveal ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity .7s cubic-bezier(.2, .7, .2, 1), transform .7s cubic-bezier(.2, .7, .2, 1)
+    }
+
+    .reveal.in {
+      opacity: 1;
+      transform: none
+    }
+
+    .stagger>* {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity .6s cubic-bezier(.2, .7, .2, 1), transform .6s cubic-bezier(.2, .7, .2, 1)
+    }
+
+    .stagger.in>* {
+      opacity: 1;
+      transform: none
+    }
+
+    .stagger.in>*:nth-child(1) {
+      transition-delay: .04s
+    }
+
+    .stagger.in>*:nth-child(2) {
+      transition-delay: .1s
+    }
+
+    .stagger.in>*:nth-child(3) {
+      transition-delay: .16s
+    }
+
+    .stagger.in>*:nth-child(4) {
+      transition-delay: .22s
+    }
+
+    .stagger.in>*:nth-child(5) {
+      transition-delay: .28s
+    }
+
+    .stagger.in>*:nth-child(6) {
+      transition-delay: .34s
+    }
+
+    .stagger.in>*:nth-child(7) {
+      transition-delay: .4s
+    }
+
+    .stagger.in>*:nth-child(8) {
+      transition-delay: .46s
+    }
+
+    /* hero load */
+    .hero-copy>*,
+    .hero .ledger {
+      animation: rise .85s cubic-bezier(.2, .7, .2, 1) both
+    }
+
+    .hero-copy>*:nth-child(1) {
+      animation-delay: .05s
+    }
+
+    .hero-copy>*:nth-child(2) {
+      animation-delay: .13s
+    }
+
+    .hero-copy>*:nth-child(3) {
+      animation-delay: .21s
+    }
+
+    .hero-copy>*:nth-child(4) {
+      animation-delay: .29s
+    }
+
+    .hero .ledger {
+      animation-delay: .38s
+    }
+
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(24px)
+      }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
+
+      *,
+      .marquee-track,
+      .hero-copy>*,
+      .hero .ledger {
+        animation: none !important
+      }
+
+      .reveal,
+      .stagger>* {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none
+      }
+
+      .caret,
+      .pulse {
+        animation: none !important
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav id="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="#top">Mid<span class="os">OS</span></a>
+      <div class="nav-right">
+        <div class="nav-links">
+          <a href="#how">Flow</a>
+          <a href="#examples">Examples</a>
+          <a href="#tools">Tools</a>
+          <a href="#start">Quickstart</a>
+        </div>
+        <a class="ghbtn" href="https://github.com/YOUR-USERNAME/midos" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z" />
+          </svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <header id="top">
+    <div class="hero">
+      <div class="hero-copy">
+        <h1>Give your<br>agent a<br><span class="it">wallet.</span></h1>
+        <p class="hero-lede">An MCP wallet that lets AI agents discover, authorize, and pay for x402-gated APIs on
+          <b>Casper</b> autonomously, with no human in the loop.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#start">Get started
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </a>
+          <a class="btn btn-ghost" href="#how">See the flow</a>
+        </div>
+      </div>
+
+      <!-- what just happened -->
+      <div class="ledger">
+        <div class="ledger-bar">
+          <span>What MidOS does</span>
+          <span class="live"><span class="pulse"></span> casper-test</span>
+        </div>
+        <div class="demo-ask">
+          <span class="who">Your agent</span>
+          <span class="q">&ldquo;Get me the weather in Tokyo.&rdquo;</span>
+        </div>
+        <ol class="demo-steps">
+          <li>
+            <span class="ds-dot"></span>
+            <div>
+              <div class="ds-title">Agent calls the paid API</div>
+              <div class="ds-sub">GET /v1/weather?city=Tokyo</div>
+            </div>
+          </li>
+          <li>
+            <span class="ds-dot red"></span>
+            <div>
+              <div class="ds-title">The API asks to be paid <span class="ds-tag">402</span></div>
+              <div class="ds-sub">price &middot; 2.5 CSPR to the seller</div>
+            </div>
+          </li>
+          <li>
+            <span class="ds-dot red"></span>
+            <div>
+              <div class="ds-title">MidOS pays it on-chain</div>
+              <div class="ds-sub">native CSPR transfer, verified on Casper</div>
+            </div>
+          </li>
+          <li>
+            <span class="ds-dot ok"></span>
+            <div>
+              <div class="ds-title">Your agent answers <span class="ds-tag ok">200</span></div>
+              <div class="ds-ans">&ldquo;Tokyo: slight rain, 21.6&deg;C, 98% humidity.&rdquo;</div>
+            </div>
+          </li>
+        </ol>
+        <div class="ledger-foot">✓ Settled on-chain — deploy on testnet.cspr.live</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- marquee -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track" id="mtrack">
+      <span><b>x402</b></span><i></i><span>402 Payment Required</span><i></i><span><b>On-chain settlement</b></span><i></i><span>Native CSPR</span><i></i><span>Ed25519 / secp256k1</span><i></i><span>Verifiable on cspr.live</span><i></i><span>Casper Testnet</span><i></i><span><b>Self-custody</b></span><i></i><span>No API keys</span><i></i><span>Model Context Protocol</span><i></i>
+    </div>
+  </div>
+
+  <!-- problem -->
+  <section class="sect">
+    <div class="wrap reveal">
+      <div class="kicker" style="margin-bottom:26px"><span class="sq"></span> The gap</div>
+      <p class="bigline">AI agents can reason, plan and execute but they <span class="strike">can&rsquo;t pay.</span>
+        <em>Until&nbsp;now.</em></p>
+    </div>
+  </section>
+
+  <!-- how it works -->
+  <section id="how" class="sect">
+    <div class="wrap">
+      <div class="reveal">
+        <div class="shead">
+          <span class="ix">01</span>
+          <span class="kicker">The x402 flow</span>
+        </div>
+        <h2>Payment becomes part<br>of the <em>request.</em></h2>
+        <p class="sec-lede">No accounts, no billing dashboards, no human in the loop. The agent calls a paid endpoint,
+          gets a price, pays on-chain, and has its data back — every payment a real transaction on Casper.</p>
+      </div>
+
+      <div class="flow-list reveal stagger">
+        <div class="flow-row">
+          <span class="flow-i">01</span>
+          <div class="flow-main">
+            <h4>Request</h4>
+            <p>The agent calls a paid API endpoint over plain HTTP.</p>
+          </div>
+          <span class="flow-sig"><span class="mut">GET</span> /v1/weather</span>
+        </div>
+        <div class="flow-row">
+          <span class="flow-i">02</span>
+          <div class="flow-main">
+            <h4>402 + price</h4>
+            <p>The server replies <span class="mono">402</span> with the amount, asset, and recipient.</p>
+          </div>
+          <span class="flow-sig"><span class="red">402</span> · 2.5 CSPR</span>
+        </div>
+        <div class="flow-row">
+          <span class="flow-i">03</span>
+          <div class="flow-main">
+            <h4>Pay on-chain</h4>
+            <p>MidOS checks budget, then submits a real native CSPR transfer to the seller.</p>
+          </div>
+          <span class="flow-sig">native transfer</span>
+        </div>
+        <div class="flow-row">
+          <span class="flow-i">04</span>
+          <div class="flow-main">
+            <h4>Finalize &amp; verify</h4>
+            <p>It waits for finalization; the facilitator verifies the transfer on Casper — recipient, amount, payer,
+              no replay.</p>
+          </div>
+          <span class="flow-sig">on-chain ✓</span>
+        </div>
+        <div class="flow-row">
+          <span class="flow-i">05</span>
+          <div class="flow-main">
+            <h4>200 OK</h4>
+            <p>The agent retries with the deploy proof and receives the live data.</p>
+          </div>
+          <span class="flow-sig"><span class="ok">200</span> OK · data</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- examples -->
+  <section id="examples" class="sect light">
+    <div class="wrap">
+      <div class="reveal">
+        <div class="shead">
+          <span class="ix">02</span>
+          <span class="kicker">Talk to it</span>
+        </div>
+        <h2>Just ask, in <em>plain language.</em></h2>
+        <p class="sec-lede">MidOS plugs into Claude or any MCP agent. Here&rsquo;s what a few prompts look like and
+          what the agent does behind the scenes.</p>
+      </div>
+
+      <div class="ex-tabs reveal">
+        <button class="ex-tab active" data-tab="pay"><span class="n">01</span>Pay for an API</button>
+        <button class="ex-tab" data-tab="bal"><span class="n">02</span>Check balance</button>
+        <button class="ex-tab" data-tab="send"><span class="n">03</span>Send CSPR</button>
+        <button class="ex-tab" data-tab="budget"><span class="n">04</span>Audit spending</button>
+      </div>
+
+      <div class="reveal">
+        <!-- pay -->
+        <div class="ex-panel active" id="pay">
+          <div class="term">
+            <div class="term-bar"><span class="dots"><i class="r"></i><i></i><i></i></span> agent · x402_fetch</div>
+            <div class="term-ask"><span class="pr">&gt;</span><span>Get me the weather in Tokyo from
+                http://localhost:3002/v1/weather and pay for it.<span class="caret"></span></span></div>
+            <div class="term-log"><span class="red">402</span> <span class="mut">Payment Required → 2.5 CSPR to
+                account-hash-4a68…3dc3</span>
+              <span class="mut">native transfer submitted · waiting for finalization…</span>
+              <span class="mut">facilitator verified deploy 57704b1e… on Casper ✓</span>
+              <span class="ok">200</span> { "location": <span class="w">"Tokyo, Japan"</span>, "temperatureC": 21.6,
+              "conditions": "Slight rain" }</div>
+            <div class="term-foot">✓ Paid 2.5 CSPR · settled on-chain · testnet.cspr.live/deploy/57704b1e…</div>
+          </div>
+        </div>
+        <!-- balance -->
+        <div class="ex-panel" id="bal">
+          <div class="term">
+            <div class="term-bar"><span class="dots"><i class="r"></i><i></i><i></i></span> agent · check_balance</div>
+            <div class="term-ask"><span class="pr">&gt;</span><span>What&rsquo;s my CSPR balance and wallet
+                address?<span class="caret"></span></span></div>
+            <div class="term-log">{
+              <span class="k">"publicKey"</span>: "01a3b5c7…f8e2",
+              <span class="k">"accountHash"</span>: "account-hash-2ebe37…75eef",
+              <span class="k">"network"</span>: "casper-test",
+              <span class="k">"cspr"</span>: <span class="w">"42.500000000 CSPR"</span>
+              }</div>
+          </div>
+        </div>
+        <!-- send -->
+        <div class="ex-panel" id="send">
+          <div class="term">
+            <div class="term-bar"><span class="dots"><i class="r"></i><i></i><i></i></span> agent · transfer_cspr</div>
+            <div class="term-ask"><span class="pr">&gt;</span><span>Send 2.5 CSPR to
+                0202f5a9…707b64.<span class="caret"></span></span></div>
+            <div class="term-log"><span class="mut">budget check ✓ (within 5.0 CSPR / call)</span>
+              <span class="mut">signing native transfer deploy…</span>
+              <span class="ok">submitted</span> {
+              <span class="k">"deployHash"</span>: "3facbc41…e72ac9",
+              <span class="k">"amount"</span>: <span class="w">"2.5 CSPR"</span>,
+              <span class="k">"explorerUrl"</span>: "https://testnet.cspr.live/deploy/3facbc41…"
+              }</div>
+          </div>
+        </div>
+        <!-- budget -->
+        <div class="ex-panel" id="budget">
+          <div class="term">
+            <div class="term-bar"><span class="dots"><i class="r"></i><i></i><i></i></span> agent · spending_report</div>
+            <div class="term-ask"><span class="pr">&gt;</span><span>Have I stayed within budget
+                today?<span class="caret"></span></span></div>
+            <div class="term-log">{
+              <span class="k">"spentToday"</span>: <span class="w">"7.5000 CSPR"</span>,
+              <span class="k">"remainingDailyBudget"</span>: "42.5000 CSPR",
+              <span class="k">"perCallLimit"</span>: "5.0 CSPR",
+              <span class="k">"recentPayments"</span>: [ 3 entries ]
+              }</div>
+            <div class="term-foot">✓ Well within limits</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- tools -->
+  <section id="tools" class="sect">
+    <div class="wrap">
+      <div class="reveal">
+        <div class="shead">
+          <span class="ix">03</span>
+          <span class="kicker">The registry</span>
+        </div>
+        <h2>A full wallet, exposed<br>as <em>eight</em> MCP tools.</h2>
+        <p class="sec-lede">Self-custody and budget-limited. Your Ed25519 or secp256k1 key signs locally, nothing is
+          sent to a backend.</p>
+      </div>
+
+      <div class="registry reveal stagger">
+        <div class="reg-head">
+          <span>Index</span><span>Tool</span><span>Function</span><span style="justify-self:end">Class</span>
+        </div>
+        <div class="reg-row x402">
+          <span class="reg-i">01</span>
+          <span class="reg-name"><i class="d"></i>x402_fetch</span>
+          <span class="reg-fn">Fetch any URL with automatic 402 handling — pay on-chain &amp; retry transparently.</span>
+          <span class="reg-tag">x402</span>
+        </div>
+        <div class="reg-row x402">
+          <span class="reg-i">02</span>
+          <span class="reg-name"><i class="d"></i>pay</span>
+          <span class="reg-fn">Settle an x402 payment on-chain and return the proof header to unlock the
+            resource.</span>
+          <span class="reg-tag">x402</span>
+        </div>
+        <div class="reg-row x402">
+          <span class="reg-i">03</span>
+          <span class="reg-name"><i class="d"></i>search_bazaar</span>
+          <span class="reg-fn">Discover x402-gated services the agent can pay for.</span>
+          <span class="reg-tag">x402</span>
+        </div>
+        <div class="reg-row">
+          <span class="reg-i">04</span>
+          <span class="reg-name"><i class="d"></i>check_balance</span>
+          <span class="reg-fn">CSPR balance, public key, and account hash on the configured network.</span>
+          <span class="reg-tag">wallet</span>
+        </div>
+        <div class="reg-row">
+          <span class="reg-i">05</span>
+          <span class="reg-name"><i class="d"></i>transfer_cspr</span>
+          <span class="reg-fn">Send native CSPR to any Casper account.</span>
+          <span class="reg-tag">wallet</span>
+        </div>
+        <div class="reg-row">
+          <span class="reg-i">06</span>
+          <span class="reg-name"><i class="d"></i>transfer_token</span>
+          <span class="reg-fn">Send a CEP-18 token on Casper.</span>
+          <span class="reg-tag">wallet</span>
+        </div>
+        <div class="reg-row">
+          <span class="reg-i">07</span>
+          <span class="reg-name"><i class="d"></i>spending_report</span>
+          <span class="reg-fn">Per-call and daily spend audit trail with budget remaining.</span>
+          <span class="reg-tag">wallet</span>
+        </div>
+        <div class="reg-row">
+          <span class="reg-i">08</span>
+          <span class="reg-name"><i class="d"></i>request_funding</span>
+          <span class="reg-fn">Funding request with address + a testnet faucet hint.</span>
+          <span class="reg-tag">wallet</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- why casper -->
+  <section class="sect light">
+    <div class="wrap">
+      <div class="reveal">
+        <div class="shead">
+          <span class="ix">04</span>
+          <span class="kicker">Why Casper</span>
+        </div>
+        <h2>Built for machine-to-<br>machine <em>money.</em></h2>
+      </div>
+      <div class="matrix reveal stagger">
+        <div class="cell">
+          <div class="ci"><svg viewBox="0 0 24 24">
+              <path d="M12 20h9" />
+              <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+            </svg> 01</div>
+          <h4>Real on-chain settlement</h4>
+          <p>Every paid call is a native CSPR transfer, finalized and verified on Casper, recipient and amount
+            checked.</p>
+        </div>
+        <div class="cell">
+          <div class="ci"><svg viewBox="0 0 24 24">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <path d="M9 12l2 2 4-4" />
+            </svg> 02</div>
+          <h4>Publicly verifiable</h4>
+          <p>Each settlement is a deploy hash anyone can open on <span class="mono">testnet.cspr.live</span> — replay
+            protected.</p>
+        </div>
+        <div class="cell">
+          <div class="ci"><svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v10M9.5 9.4c0-1.2 1.1-1.9 2.5-1.9s2.5.6 2.5 1.7c0 2.3-5 1.4-5 3.7 0 1.1 1.1 1.8 2.5 1.8s2.5-.7 2.5-1.9" />
+            </svg> 03</div>
+          <h4>CEP-18 micropayments ready</h4>
+          <p>A faithful <span class="mono">casper-eip-712</span> port (EIP-3009 style) is wired for sub-cent token
+            pricing — the next step.</p>
+        </div>
+        <div class="cell">
+          <div class="ci"><svg viewBox="0 0 24 24">
+              <rect x="5" y="5" width="14" height="14" rx="1" />
+              <rect x="9" y="9" width="6" height="6" rx="1" />
+              <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" />
+            </svg> 04</div>
+          <h4>Account abstraction</h4>
+          <p>On-chain agent identity without a human wallet in the loop.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- quickstart -->
+  <section id="start" class="sect">
+    <div class="wrap">
+      <div class="reveal">
+        <div class="shead">
+          <span class="ix">05</span>
+          <span class="kicker">Quickstart</span>
+        </div>
+        <h2>Connect it to Claude<br>in <em>four</em> steps.</h2>
+        <p class="sec-lede">MidOS runs as an MCP server. Point Claude Desktop or any MCP client at it, hand it a
+          key, and your agent can start paying. No backend, no API keys.</p>
+      </div>
+
+      <div class="qs reveal">
+        <div class="qstep">
+          <div class="qn">1</div>
+          <div>
+            <h4>Get a key and some testnet CSPR</h4>
+            <p>MidOS is self-custody, it signs locally with an Ed25519 key you control. Bring your own, or generate
+              one, then top it up from the testnet faucet.</p>
+            <div class="code">
+              <div class="code-head">
+                <span class="ttl">terminal</span>
+                <button class="copy" data-copy="c-key">Copy</button>
+              </div>
+              <pre id="c-key"><span class="c"># generate an Ed25519 key (or use one you already have)</span>
+casper-client keygen ./keys
+<span class="c"># fund the public key at the testnet faucet:</span>
+<span class="c"># https://testnet.cspr.live/tools/faucet</span></pre>
+            </div>
+          </div>
+        </div>
+
+        <div class="qstep">
+          <div class="qn">2</div>
+          <div>
+            <h4>Add MidOS to your MCP config</h4>
+            <p>Drop this into your Claude Desktop config. <span class="mono">npx</span> fetches and runs the published
+              wallet no clone required. <span class="mono">CASPER_SECRET_KEY</span> takes hex, PEM contents, or a path
+              to a <span class="mono">.pem</span>.</p>
+            <div class="code">
+              <div class="code-head">
+                <span class="ttl">claude_desktop_config.json</span>
+                <button class="copy" data-copy="c-cfg">Copy</button>
+              </div>
+              <pre id="c-cfg">{
+  <span class="k">"mcpServers"</span>: {
+    <span class="k">"midos"</span>: {
+      <span class="k">"command"</span>: <span class="s">"npx"</span>,
+      <span class="k">"args"</span>: [<span class="s">"-y"</span>, <span class="s">"midos-wallet-mcp"</span>],
+      <span class="k">"env"</span>: {
+        <span class="k">"CASPER_SECRET_KEY"</span>: <span class="s">"&lt;ed25519 or secp256k1 key, hex or .pem&gt;"</span>,
+        <span class="k">"NETWORK"</span>: <span class="s">"casper-test"</span>,
+        <span class="k">"CASPER_NODE_URL"</span>: <span class="s">"https://node.testnet.casper.network/rpc"</span>,
+        <span class="k">"MAX_PER_CALL"</span>: <span class="s">"5.0"</span>,
+        <span class="k">"MAX_PER_DAY"</span>: <span class="s">"50.0"</span>
+      }
+    }
+  }
+}</pre>
+            </div>
+            <div class="os-paths">
+              <div class="os-path"><b>macOS</b>
+                <code>~/Library/Application&nbsp;Support/Claude/claude_desktop_config.json</code>
+              </div>
+              <div class="os-path"><b>Windows</b>
+                <code>%APPDATA%\Claude\claude_desktop_config.json</code>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="qstep">
+          <div class="qn">3</div>
+          <div>
+            <h4>Restart Claude</h4>
+            <p>Quit and reopen Claude Desktop. MidOS connects and exposes its eight wallet tools. Budgets are enforced
+              <em>before</em> any signature a runaway loop can&rsquo;t drain the key past
+              <span class="mono">MAX_PER_CALL</span> or <span class="mono">MAX_PER_DAY</span>.</p>
+          </div>
+        </div>
+
+        <div class="qstep">
+          <div class="qn">4</div>
+          <div>
+            <h4>Just ask</h4>
+            <p>That&rsquo;s it talk to your agent in plain language. It discovers the price, checks budget, pays with a
+              real on-chain transfer, and returns the data on its own.</p>
+            <div class="prompt-quote">&ldquo;Get me the weather in Tokyo from http://127.0.0.1:3002/v1/weather?city=Tokyo
+              and pay for it.&rdquo;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- final cta -->
+  <section class="sect final">
+    <div class="wrap reveal">
+      <div class="kicker"><span class="sq"></span> Casper Agentic Buildathon</div>
+      <h2>Let your agent<br>pay its <em>own way.</em></h2>
+      <p>Plug MidOS into Claude or any agent framework and watch it pay for data on Casper — on-chain, all on its own.</p>
+      <a class="btn btn-primary" href="https://github.com/YOUR-USERNAME/midos" target="_blank" rel="noopener">Clone the
+        repo
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      </a>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="foot-top">
+        <div>
+          <div class="brand">Mid<span class="os">OS</span></div>
+          <p class="foot-blurb">A self-custody MCP wallet that gives AI agents the ability to pay for x402-gated APIs on
+            Casper.</p>
+        </div>
+        <div class="foot-links">
+          <div class="foot-col">
+            <h5>Product</h5>
+            <a href="#how">The flow</a>
+            <a href="#examples">Examples</a>
+            <a href="#tools">Tools</a>
+            <a href="#start">Quickstart</a>
+          </div>
+          <div class="foot-col">
+            <h5>Protocol</h5>
+            <a href="https://github.com/YOUR-USERNAME/midos" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://testnet.cspr.live/tools/faucet" target="_blank" rel="noopener">Testnet faucet</a>
+          </div>
+        </div>
+      </div>
+      <div class="foot-bottom">
+        <span>MIT LICENSE</span>
+        <span>BUILT ON CASPER · ON-CHAIN x402 · SELF-CUSTODY</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // tabs
+    const tabs = document.querySelectorAll('.ex-tab');
+    const panels = document.querySelectorAll('.ex-panel');
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById(t.dataset.tab).classList.add('active');
+    }));
+
+    // copy buttons
+    document.querySelectorAll('.copy').forEach(b => b.addEventListener('click', () => {
+      const txt = document.getElementById(b.dataset.copy).innerText;
+      navigator.clipboard.writeText(txt).then(() => {
+        const o = b.textContent; b.textContent = 'Copied ✓';
+        setTimeout(() => b.textContent = o, 1400);
+      });
+    }));
+
+    // duplicate marquee content for a seamless 50% loop
+    const mt = document.getElementById('mtrack');
+    if (mt) mt.innerHTML += mt.innerHTML;
+
+    // scroll reveal
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: .12 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    // nav solidifies on scroll
+    const nav = document.getElementById('nav');
+    const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 40);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  </script>
+</body>
+
+</html>

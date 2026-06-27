@@ -1,0 +1,101 @@
+{
+  "manifest_version": "0.3",
+  "name": "midos",
+  "display_name": "MidOS — Casper Wallet for AI Agents",
+  "version": "0.2.0",
+  "description": "Casper wallet for AI agents. Check CSPR balance and pay for x402-gated APIs with EIP-712 signed authorizations — no API keys, no accounts.",
+  "long_description": "Give your AI agent a Casper wallet. MidOS adds tools for:\n\n- **check_balance** — View your CSPR balance, public key, and account hash\n- **pay** — Sign a Casper x402 payment authorization (EIP-712 TransferWithAuthorization, Ed25519)\n- **x402_fetch** — Fetch a URL with automatic x402 payment handling\n- **transfer_cspr** — Send native CSPR to another account\n- **transfer_token** — Send a CEP-18 token on Casper\n- **request_funding** — Get a funding request (address + faucet hint)\n- **spending_report** — Audit per-call and daily spend\n- **search_bazaar** — Discover x402-gated services\n\nUse your Ed25519 secret key to pay on Casper Testnet or Mainnet. Budget limits protect your funds: set max per call and max per day.",
+  "author": {
+    "name": "MidOS",
+    "url": "https://github.com/YOUR-USERNAME/midos"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR-USERNAME/midos"
+  },
+  "homepage": "https://github.com/YOUR-USERNAME/midos",
+  "keywords": [
+    "x402",
+    "wallet",
+    "casper",
+    "cspr",
+    "payments",
+    "agent-commerce"
+  ],
+
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/server/index.js"],
+      "env": {
+        "CASPER_SECRET_KEY": "${user_config.casper_secret_key}",
+        "NETWORK": "${user_config.network}",
+        "X402_TOKEN_CONTRACT": "${user_config.x402_token_contract}",
+        "MAX_PER_CALL": "${user_config.max_per_call}",
+        "MAX_PER_DAY": "${user_config.max_per_day}"
+      }
+    }
+  },
+
+  "user_config": {
+    "casper_secret_key": {
+      "type": "string",
+      "title": "Casper Secret Key (Ed25519)",
+      "description": "Your Casper Ed25519 secret key as hex or PEM contents. Used to sign x402 payments and transfers on Casper Testnet or Mainnet. Stored securely in your OS keychain.",
+      "required": false,
+      "sensitive": true
+    },
+    "network": {
+      "type": "string",
+      "title": "Default Network",
+      "description": "Casper network: casper (mainnet), casper-test (testnet), or casper-nctl (local).",
+      "required": false,
+      "default": "casper-test"
+    },
+    "x402_token_contract": {
+      "type": "string",
+      "title": "CEP-18 Token Contract (optional)",
+      "description": "Deployed CEP-18 x402 token contract package hash (hash-<hex>). Leave blank for the offchain demo. Required for on-chain settlement.",
+      "required": false
+    },
+    "max_per_call": {
+      "type": "string",
+      "title": "Max CSPR per Payment",
+      "description": "Maximum CSPR allowed per single payment. Safety limit.",
+      "required": false,
+      "default": "1.0"
+    },
+    "max_per_day": {
+      "type": "string",
+      "title": "Max CSPR per Day",
+      "description": "Maximum total CSPR allowed per calendar day.",
+      "required": false,
+      "default": "100.0"
+    }
+  },
+
+  "tools": [
+    {
+      "name": "check_balance",
+      "description": "Check CSPR balance, public key, and account hash on the configured Casper network."
+    },
+    {
+      "name": "pay",
+      "description": "Sign a Casper x402 payment authorization. Returns the Payment-Signature header value."
+    },
+    {
+      "name": "x402_fetch",
+      "description": "Fetch a URL with automatic Casper x402 payment. Handles 402 responses by signing an EIP-712 authorization and retrying with the Payment-Signature header."
+    }
+  ],
+
+  "compatibility": {
+    "platforms": ["darwin", "win32"],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.mcpb-build/
+*.mcpb
+*.log
+.DS_Store
+
+# secrets — never commit private keys
+.secret/
+.secrets/
+*.pem
